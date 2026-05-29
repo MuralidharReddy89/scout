@@ -1,0 +1,73 @@
+[project]
+name = "scout"
+version = "0.1.0"
+description = "LLM-driven web research agent built on Playwright and Python."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+    { name = "MuralidharReddy89", email = "bandimuralidharreddy0772@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.105.2",
+    "playwright>=1.60.0",
+    "pydantic>=2.13.4",
+    "typer>=0.26.3",
+]
+
+[project.scripts]
+scout = "scout:main"
+
+[build-system]
+requires = ["uv_build>=0.11.17,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=2.1.0",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.15.15",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W",   # pycodestyle + pyflakes
+    "I",             # isort
+    "B",             # bugbear
+    "UP",            # pyupgrade
+    "SIM",           # simplify
+    "RUF",           # ruff-specific
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+warn_unused_configs = true
+warn_unreachable = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = ["scout.*"]
+disallow_any_unimported = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=scout",
+    "--cov-report=term-missing",
+]
+xfail_strict = true
