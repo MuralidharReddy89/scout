@@ -6,5 +6,6 @@ except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
 from scout.cli import main
+from scout.models import Citation, Finding, Report
 
-__all__ = ["__version__", "main"]
+__all__ = ["Citation", "Finding", "Report", "__version__", "main"]
