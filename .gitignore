@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+sdist/
+wheels/
+share/python-wheels/
+MANIFEST
+
+# uv / virtualenvs
+.venv/
+venv/
+env/
+ENV/
+.python-version.local
+
+# Test / coverage artefacts
+.pytest_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.hypothesis/
+
+# mypy / ruff / type-check caches
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.pyre/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# scout runtime output
+reports/
+screenshots/
+traces/
+runs/
+*.scout.json
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.augment/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build / log scratch
+*.log
+*.tmp
+.commit_msg.tmp
+.pr_body.tmp
