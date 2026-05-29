@@ -5,7 +5,20 @@ try:
 except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
+from scout.budget import Budget, BudgetExceeded, BudgetLimits, BudgetUsage
 from scout.cli import main
+from scout.config import Config
 from scout.models import Citation, Finding, Report
 
-__all__ = ["Citation", "Finding", "Report", "__version__", "main"]
+__all__ = [
+    "Budget",
+    "BudgetExceeded",
+    "BudgetLimits",
+    "BudgetUsage",
+    "Citation",
+    "Config",
+    "Finding",
+    "Report",
+    "__version__",
+    "main",
+]
