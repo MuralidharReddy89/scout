@@ -55,8 +55,10 @@ class Config(BaseModel):
             max_pages=_int(e, "SCOUT_MAX_PAGES", default=DEFAULT_MAX_PAGES),
             max_wall_seconds=_float(e, "SCOUT_MAX_WALL_SECONDS", default=DEFAULT_MAX_WALL_SECONDS),
         )
+        raw_key = e.get("ANTHROPIC_API_KEY")
+        api_key = raw_key.strip() if raw_key else None
         return cls(
-            anthropic_api_key=e.get("ANTHROPIC_API_KEY") or None,
+            anthropic_api_key=api_key or None,
             llm_model=e.get("SCOUT_LLM_MODEL") or DEFAULT_MODEL,
             budget_limits=limits,
         )

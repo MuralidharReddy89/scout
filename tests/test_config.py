@@ -45,6 +45,16 @@ def test_empty_api_key_normalizes_to_none() -> None:
     assert c.anthropic_api_key is None
 
 
+def test_whitespace_only_api_key_normalizes_to_none() -> None:
+    c = Config.from_env(env={"ANTHROPIC_API_KEY": "  \n\t "})
+    assert c.anthropic_api_key is None
+
+
+def test_api_key_is_stripped_of_surrounding_whitespace() -> None:
+    c = Config.from_env(env={"ANTHROPIC_API_KEY": "\n  sk-test-redacted  \n"})
+    assert c.anthropic_api_key == "sk-test-redacted"
+
+
 def test_empty_model_normalizes_to_default() -> None:
     c = Config.from_env(env={"SCOUT_LLM_MODEL": ""})
     assert c.llm_model == DEFAULT_MODEL
