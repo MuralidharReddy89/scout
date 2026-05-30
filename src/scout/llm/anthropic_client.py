@@ -43,13 +43,22 @@ class AnthropicClient:
     ) -> None:
         if not api_key:
             raise ValueError("api_key must be a non-empty string")
+        stripped_key = api_key.strip()
+        if not stripped_key:
+            raise ValueError("api_key must be a non-empty string")
+        if any(ch.isspace() for ch in stripped_key):
+            raise ValueError(
+                "api_key contains internal whitespace; check for embedded "
+                "newlines or spaces (often caused by multi-line shell "
+                "assignments such as a PowerShell here-string)"
+            )
         if not model:
             raise ValueError("model must be a non-empty string")
         self._model = model
         if client is None:
             from anthropic import Anthropic as _Anthropic
 
-            client = _Anthropic(api_key=api_key)
+            client = _Anthropic(api_key=stripped_key)
         self._client = client
 
     @property

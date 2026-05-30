@@ -69,6 +69,38 @@ def test_rejects_empty_api_key_or_model() -> None:
         AnthropicClient(api_key="k", model="", client=cast(Any, MagicMock()))
 
 
+def test_rejects_whitespace_only_api_key() -> None:
+    with pytest.raises(ValueError, match="api_key"):
+        AnthropicClient(api_key="   \n\t  ", model="m", client=cast(Any, MagicMock()))
+
+
+def test_rejects_api_key_with_internal_whitespace() -> None:
+    with pytest.raises(ValueError, match="internal whitespace"):
+        AnthropicClient(api_key="sk-abc\ndef", model="m", client=cast(Any, MagicMock()))
+
+
+def test_strips_surrounding_whitespace_when_constructing_sdk_client(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """When no explicit client is passed, the api_key handed to the SDK is stripped.
+
+    Catches the PowerShell multi-line-assignment failure mode where the env var
+    captured a literal leading newline and the Anthropic SDK then produced
+    httpx ``LocalProtocolError: Illegal header value``.
+    """
+    captured: dict[str, Any] = {}
+
+    class _FakeAnthropic:
+        def __init__(self, *, api_key: str) -> None:
+            captured["api_key"] = api_key
+
+    import anthropic
+
+    monkeypatch.setattr(anthropic, "Anthropic", _FakeAnthropic)
+    AnthropicClient(api_key="  \n sk-padded \n ", model="m")
+    assert captured["api_key"] == "sk-padded"
+
+
 def test_complete_validates_inputs() -> None:
     client = AnthropicClient(api_key="k", model="m", client=_stub_client(_resp(content=[])))
     with pytest.raises(ValueError, match="max_tokens"):
