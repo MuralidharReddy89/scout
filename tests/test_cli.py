@@ -114,3 +114,49 @@ def test_research_model_flag_overrides_config(
     result = runner.invoke(app, ["research", "q", "--model", "claude-test"])
     assert result.exit_code == 0, result.stdout + result.stderr
     assert seen["model"] == "claude-test"
+
+
+def test_main_invokes_truststore_inject_when_available(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``main`` activates the OS trust store on startup so corporate-CA TLS works."""
+    import truststore
+
+    calls: list[None] = []
+    monkeypatch.setattr(truststore, "inject_into_ssl", lambda: calls.append(None))
+    monkeypatch.setattr(cli, "app", lambda: None)
+
+    cli.main()
+
+    assert calls == [None]
+
+
+def test_inject_swallows_truststore_runtime_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A failing ``inject_into_ssl`` must not crash the CLI startup."""
+    import truststore
+
+    def _raise() -> None:
+        raise RuntimeError("simulated truststore failure")
+
+    monkeypatch.setattr(truststore, "inject_into_ssl", _raise)
+    cli._inject_system_trust_store()
+
+
+def test_inject_is_a_noop_when_truststore_is_unimportable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing ``truststore`` package is a soft degradation, not a hard error."""
+    import builtins
+    from typing import Any
+
+    real_import = builtins.__import__
+
+    def _fake_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "truststore":
+            raise ImportError("simulated missing truststore")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    cli._inject_system_trust_store()

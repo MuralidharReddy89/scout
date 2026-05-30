@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING, Annotated
 
@@ -100,7 +100,32 @@ def _open_browser() -> Iterator[BrowserTool]:
         yield browser
 
 
+def _inject_system_trust_store() -> None:
+    """Wire the OS-native trust store into Python's ``ssl`` module.
+
+    On corporate networks that perform TLS interception, the default
+    ``certifi`` CA bundle used by ``httpx`` (and therefore the Anthropic
+    SDK) does not trust the intercepting proxy, producing an opaque
+    ``CERTIFICATE_VERIFY_FAILED`` from any HTTPS call. ``truststore``
+    swaps ``ssl.SSLContext`` for one backed by the OS root store (the
+    Windows certificate store on Windows, the system keychain on macOS,
+    OpenSSL's default on Linux), which transparently picks up enterprise
+    root CAs.
+
+    Failures are swallowed: a missing or broken ``truststore`` install is
+    a best-effort polyfill, not a hard requirement. Networks that don't
+    need this continue to work via the default ``certifi`` bundle.
+    """
+    try:
+        import truststore
+    except ImportError:
+        return
+    with suppress(Exception):
+        truststore.inject_into_ssl()
+
+
 def main() -> None:
+    _inject_system_trust_store()
     app()
 
 
