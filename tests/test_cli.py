@@ -4,6 +4,7 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 from importlib.metadata import version
+from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
@@ -160,3 +161,83 @@ def test_inject_is_a_noop_when_truststore_is_unimportable(
 
     monkeypatch.setattr(builtins, "__import__", _fake_import)
     cli._inject_system_trust_store()
+
+
+def test_load_dotenv_file_populates_environment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A ``.env`` next to the working directory feeds variables into ``os.environ``."""
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "SCOUT_LLM_MODEL=claude-from-dotenv\nSCOUT_MAX_PAGES=7\n",
+        encoding="utf-8",
+    )
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("SCOUT_LLM_MODEL", raising=False)
+    monkeypatch.delenv("SCOUT_MAX_PAGES", raising=False)
+
+    cli._load_dotenv_file()
+
+    import os
+
+    assert os.environ.get("SCOUT_LLM_MODEL") == "claude-from-dotenv"
+    assert os.environ.get("SCOUT_MAX_PAGES") == "7"
+
+
+def test_load_dotenv_file_does_not_override_existing_env(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Values already set in the shell win over the ``.env`` file."""
+    env_file = tmp_path / ".env"
+    env_file.write_text("SCOUT_LLM_MODEL=from-dotenv\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("SCOUT_LLM_MODEL", "from-shell")
+
+    cli._load_dotenv_file()
+
+    import os
+
+    assert os.environ["SCOUT_LLM_MODEL"] == "from-shell"
+
+
+def test_load_dotenv_file_is_a_noop_when_no_file_exists(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Missing ``.env`` must not raise."""
+    monkeypatch.chdir(tmp_path)
+    cli._load_dotenv_file()
+
+
+def test_load_dotenv_file_is_a_noop_when_dotenv_is_unimportable(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A missing ``python-dotenv`` install degrades gracefully."""
+    import builtins
+    from typing import Any
+
+    real_import = builtins.__import__
+
+    def _fake_import(name: str, *args: Any, **kwargs: Any) -> Any:
+        if name == "dotenv":
+            raise ImportError("simulated missing python-dotenv")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", _fake_import)
+    cli._load_dotenv_file()
+
+
+def test_main_loads_dotenv_before_truststore(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``main`` loads the .env file before injecting the trust store."""
+    order: list[str] = []
+    monkeypatch.setattr(cli, "_load_dotenv_file", lambda: order.append("dotenv"))
+    monkeypatch.setattr(cli, "_inject_system_trust_store", lambda: order.append("truststore"))
+    monkeypatch.setattr(cli, "app", lambda: order.append("app"))
+
+    cli.main()
+
+    assert order == ["dotenv", "truststore", "app"]
