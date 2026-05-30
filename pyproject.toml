@@ -71,3 +71,6 @@ addopts = [
     "--cov-report=term-missing",
 ]
 xfail_strict = true
+markers = [
+    "integration: tests that hit a real external service (skipped unless required env vars are set)",
+]
