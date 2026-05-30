@@ -1,0 +1,74 @@
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Python build / cache artefacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+
+# Test, type-check, lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.hypothesis/
+
+# Tests and dev-only files are not needed in the runtime image
+tests/
+
+# Playwright cache (the base image already ships browsers)
+playwright/.cache/
+test-results/
+playwright-report/
+
+# scout runtime output
+reports/
+screenshots/
+traces/
+runs/
+*.scout.json
+
+# Secrets / env (defence in depth — these should never be in the repo anyway)
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.augment/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# CI / build / docs that the image does not need at runtime
+.github/
+*.log
+*.tmp
+.commit_msg.tmp
+.pr_body.tmp
+
+# Docker itself
+Dockerfile
+.dockerignore
