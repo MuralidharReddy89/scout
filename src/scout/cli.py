@@ -100,6 +100,29 @@ def _open_browser() -> Iterator[BrowserTool]:
         yield browser
 
 
+def _load_dotenv_file() -> None:
+    """Load environment variables from a ``.env`` file, if present.
+
+    Searches the current directory and walks up the tree, matching the
+    convention used by ``python-dotenv``'s :func:`find_dotenv`. Values
+    already set in the process environment win, so an explicit
+    ``$env:ANTHROPIC_API_KEY`` in the shell still overrides whatever is
+    in ``.env``.
+
+    Failures are swallowed: a missing ``python-dotenv`` install or a
+    malformed ``.env`` is a best-effort convenience, not a hard
+    requirement.
+    """
+    try:
+        from dotenv import find_dotenv, load_dotenv
+    except ImportError:
+        return
+    with suppress(Exception):
+        path = find_dotenv(usecwd=True)
+        if path:
+            load_dotenv(path, override=False)
+
+
 def _inject_system_trust_store() -> None:
     """Wire the OS-native trust store into Python's ``ssl`` module.
 
@@ -125,6 +148,7 @@ def _inject_system_trust_store() -> None:
 
 
 def main() -> None:
+    _load_dotenv_file()
     _inject_system_trust_store()
     app()
 
