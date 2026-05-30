@@ -67,6 +67,9 @@ class Report(_Frozen):
     model: NonEmptyStr
     started_at: datetime
     finished_at: datetime
+    summary: str = ""
+    truncated: bool = False
+    over_budget: bool = False
 
     @field_validator("started_at", "finished_at")
     @classmethod
